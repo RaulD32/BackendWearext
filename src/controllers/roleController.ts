@@ -1,28 +1,45 @@
 import { Request, Response, NextFunction } from 'express';
-import { createRole, getAllRoles } from '../services/roleService.js';
+import { roleService } from '../services/roleService.js';
 
-//POST
-export async function createRoleController(req: Request, res: Response, next: NextFunction) {
+//GET
+export async function getRolesController(req: Request, res: Response, next: NextFunction) {
   try {
-    const { name, description } = req.body;
-
-    if (!name || !description) {
-      return res.status(400).json({ message: 'Nombre y descripción son requeridos' });
-    }
-
-    const id = await createRole(name, description);
-    res.status(201).json({ id, name, description });
+    const roles = await roleService.getAll();
+    res.json(roles);
   } catch (err) {
     next(err);
   }
 }
 
-//GET
-export async function getRolesController(req: Request, res: Response, next: NextFunction) {
+//CREATE
+export async function createRoleController(req: Request, res: Response, next: NextFunction) {
   try {
-    const roles = await getAllRoles();
-    res.json(roles);
-  } catch (error) {
-    next(error);
+    const result = await roleService.create(req.body);
+    res.status(201).json({ message: 'Rol creado', id: result.insertId });
+  } catch (err) {
+    next(err);
   }
 }
+
+//UPDATE
+export async function updateRoleController(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { id } = req.params;
+    await roleService.update(Number(id), req.body);
+    res.json({ message: 'Rol actualizado' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+//DELETE
+export async function deleteRoleController(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { id } = req.params;
+    await roleService.delete(Number(id));
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}
+

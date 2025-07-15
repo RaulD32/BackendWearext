@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import app from './app.js';  // ojo la extensión .js aunque el archivo sea .ts
+import app from './app.js';  
 
 dotenv.config();
 

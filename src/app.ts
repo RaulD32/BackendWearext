@@ -1,13 +1,18 @@
 import express from 'express';
-import productRoutes from './routes/productRoutes.js';
+import morgan from 'morgan';
+import dotenv from 'dotenv';
 import roleRoutes from './routes/roleRoutes.js';
 import { errorMiddleware } from './middlewares/errorMiddleware.js';
 
+dotenv.config();
 const app = express();
 
+
+
+app.use(morgan('dev'));
 app.use(express.json());
 
-app.use('/productos', productRoutes);
+
 app.use('/roles', roleRoutes);
 
 
