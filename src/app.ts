@@ -3,6 +3,7 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import roleRoutes from './routes/roleRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import authRoutes from './routes/authRoutes.js';    
 import { errorMiddleware } from './middlewares/errorMiddleware.js';
 
 dotenv.config();
@@ -16,6 +17,7 @@ app.use(express.json());
 
 app.use('/roles', roleRoutes);
 app.use('/users', userRoutes);
+app.use('/auth', authRoutes);
 
 app.use(errorMiddleware);
 
