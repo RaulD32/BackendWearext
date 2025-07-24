@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import {
   getUsersController,
+  getUserByIdController,
   createUserController,
   updateUserController,
   deleteUserController
 } from '../controllers/userController.js';
+import { validate, validateParams, schemas, paramSchemas } from '../middlewares/validationMiddleware.js';
 
 const router = Router();
 
@@ -54,6 +56,59 @@ const router = Router();
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get('/', getUsersController);
+
+/**
+ * @swagger
+ * /api/users/{id}:
+ *   get:
+ *     tags:
+ *       - Usuarios
+ *     summary: Obtener usuario por ID
+ *     description: |
+ *       Obtiene un usuario específico por su ID. No incluye la contraseña en la respuesta.
+ *       Requiere autenticación.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID único del usuario
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *     responses:
+ *       200:
+ *         description: Usuario obtenido exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ApiResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Token no válido o faltante
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Usuario no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get('/:id', validateParams(paramSchemas.id), getUserByIdController);
 
 /**
  * @swagger
@@ -137,7 +192,7 @@ router.get('/', getUsersController);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/', createUserController);
+router.post('/', validate(schemas.createUser), createUserController);
 
 /**
  * @swagger
@@ -228,7 +283,7 @@ router.post('/', createUserController);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.put('/:id', updateUserController);
+router.put('/:id', validateParams(paramSchemas.id), validate(schemas.updateUser), updateUserController);
 
 /**
  * @swagger
@@ -285,6 +340,6 @@ router.put('/:id', updateUserController);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.delete('/:id', deleteUserController);
+router.delete('/:id', validateParams(paramSchemas.id), deleteUserController);
 
 export default router;

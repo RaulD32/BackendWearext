@@ -1,11 +1,41 @@
 import { Request, Response, NextFunction } from 'express';
 import { userService } from '../services/userService.js';
 
-// GET 
+// GET ALL
 export async function getUsersController(req: Request, res: Response, next: NextFunction) {
   try {
     const users = await userService.getAll();
-    res.json(users);
+    res.json({
+      success: true,
+      message: 'Usuarios obtenidos exitosamente',
+      data: users
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// GET BY ID
+export async function getUserByIdController(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { id } = req.params;
+    const user = await userService.getById(Number(id));
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado'
+      });
+    }
+
+    // No devolver la contraseña en la respuesta
+    const { password, ...userWithoutPassword } = user;
+    
+    res.json({
+      success: true,
+      message: 'Usuario obtenido exitosamente',
+      data: userWithoutPassword
+    });
   } catch (err) {
     next(err);
   }
@@ -15,7 +45,16 @@ export async function getUsersController(req: Request, res: Response, next: Next
 export async function createUserController(req: Request, res: Response, next: NextFunction) {
   try {
     const result = await userService.create(req.body);
-    res.status(201).json({ message: 'Usuario creado', id: result.insertId });
+    
+    // Obtener el usuario creado sin la contraseña
+    const newUser = await userService.getById(result.insertId);
+    const { password, ...userWithoutPassword } = newUser;
+    
+    res.status(201).json({
+      success: true,
+      message: 'Usuario creado exitosamente',
+      data: userWithoutPassword
+    });
   } catch (err) {
     next(err);
   }
@@ -25,8 +64,27 @@ export async function createUserController(req: Request, res: Response, next: Ne
 export async function updateUserController(req: Request, res: Response, next: NextFunction) {
   try {
     const { id } = req.params;
+    
+    // Verificar si el usuario existe
+    const existingUser = await userService.getById(Number(id));
+    if (!existingUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado'
+      });
+    }
+
     await userService.update(Number(id), req.body);
-    res.json({ message: 'Usuario actualizado' });
+    
+    // Obtener el usuario actualizado sin la contraseña
+    const updatedUser = await userService.getById(Number(id));
+    const { password, ...userWithoutPassword } = updatedUser;
+    
+    res.json({
+      success: true,
+      message: 'Usuario actualizado exitosamente',
+      data: userWithoutPassword
+    });
   } catch (err) {
     next(err);
   }
@@ -36,8 +94,22 @@ export async function updateUserController(req: Request, res: Response, next: Ne
 export async function deleteUserController(req: Request, res: Response, next: NextFunction) {
   try {
     const { id } = req.params;
+    
+    // Verificar si el usuario existe
+    const existingUser = await userService.getById(Number(id));
+    if (!existingUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado'
+      });
+    }
+
     await userService.delete(Number(id));
-    res.status(204).send();
+    
+    res.json({
+      success: true,
+      message: 'Usuario eliminado exitosamente'
+    });
   } catch (err) {
     next(err);
   }
