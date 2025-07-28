@@ -10,6 +10,9 @@ export interface Message {
     // Datos adicionales para respuestas
     category_name?: string;
     creator_name?: string;
+    // Información de asignación
+    assigned_children?: string;
+    assigned_children_list?: Array<{ name: string, id: number }>;
 }
 
 export interface CreateMessageDTO {

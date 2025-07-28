@@ -14,6 +14,9 @@ import ttsRoutes from './routes/ttsRoutes.js';
 import seederRoutes from './routes/seederRoutes.js';
 import websocketRoutes from './routes/websocketRoutes.js';
 import esp32Routes from './routes/esp32Routes.js';
+import whatsappRoutes from './routes/whatsappRoutes.js';
+import testWhatsappRoutes from './routes/testWhatsappRoutes.js';
+import simulationRoutes from './routes/simulationRoutes.js';
 import { errorMiddleware } from './middlewares/errorMiddleware.js';
 import { setupSwagger } from './config/swagger.js';
 import './controllers/websocketController.js'; // Inicializar WebSocket
@@ -69,6 +72,9 @@ app.use('/api/tts', ttsRoutes);
 app.use('/api/seeder', seederRoutes);
 app.use('/api/websocket', websocketRoutes);
 app.use('/api/esp32', esp32Routes);
+app.use('/api/whatsapp', whatsappRoutes);
+app.use('/api/test-whatsapp', testWhatsappRoutes); // Rutas temporales sin auth
+app.use('/api/simulation', simulationRoutes); // Rutas de simulación
 
 // Ruta de salud del servidor
 app.get('/api/health', (req, res) => {

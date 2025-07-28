@@ -15,10 +15,13 @@ export class MessageService extends BaseService {
           m.id, m.text, m.audio_url, m.category_id, m.created_by, m.is_active,
           m.created_at, m.updated_at,
           c.name as category_name,
-          u.name as creator_name
+          u.name as creator_name,
+          GROUP_CONCAT(DISTINCT CONCAT(assigned_child.name, ':', assigned_child.id) SEPARATOR '|') as assigned_children
         FROM messages m
         INNER JOIN categories c ON m.category_id = c.id
         INNER JOIN users u ON m.created_by = u.id
+        LEFT JOIN child_messages cm ON m.id = cm.message_id
+        LEFT JOIN users assigned_child ON cm.child_id = assigned_child.id AND assigned_child.role_id = 3
         WHERE m.is_active = true
       `;
 
@@ -47,10 +50,20 @@ export class MessageService extends BaseService {
                 }
             }
 
-            query += ' ORDER BY m.created_at DESC';
+            query += ' GROUP BY m.id, m.text, m.audio_url, m.category_id, m.created_by, m.is_active, m.created_at, m.updated_at, c.name, u.name ORDER BY m.created_at DESC';
 
             const [rows] = await this.pool.execute(query, params);
-            return rows as Message[];
+            const messages = rows as any[];
+
+            // Procesar los mensajes para formatear la información de asignación
+            return messages.map(message => ({
+                ...message,
+                assigned_children_list: message.assigned_children ?
+                    message.assigned_children.split('|').map((child: string) => {
+                        const [name, id] = child.split(':');
+                        return { name, id: parseInt(id) };
+                    }) : []
+            }));
         } catch (error) {
             console.error('Error al obtener mensajes:', error);
             throw new Error('Error al obtener mensajes');

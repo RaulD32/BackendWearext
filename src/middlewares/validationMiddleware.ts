@@ -144,5 +144,8 @@ export const validateParams = (schema: joi.ObjectSchema) => {
 export const paramSchemas = {
     id: joi.object({
         id: joi.number().integer().positive().required()
+    }),
+    childId: joi.object({
+        childId: joi.number().integer().positive().required()
     })
 };

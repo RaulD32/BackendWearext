@@ -1,9 +1,8 @@
-CREATE DATABASE talking_children; 
-
+-- Migración de base de datos para Talking Children
 USE talking_children;
 
 -- Tabla de roles
-CREATE TABLE roles (
+CREATE TABLE IF NOT EXISTS roles (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   description TEXT,
@@ -12,7 +11,7 @@ CREATE TABLE roles (
 );
 
 -- Tabla de usuarios
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
   email VARCHAR(150) NOT NULL UNIQUE,
@@ -24,7 +23,7 @@ CREATE TABLE users (
 );
 
 -- Tabla de categorías de mensajes
-CREATE TABLE categories (
+CREATE TABLE IF NOT EXISTS categories (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
   description TEXT,
@@ -35,7 +34,7 @@ CREATE TABLE categories (
 );
 
 -- Tabla de mensajes con TTS
-CREATE TABLE messages (
+CREATE TABLE IF NOT EXISTS messages (
   id INT AUTO_INCREMENT PRIMARY KEY,
   text TEXT NOT NULL,
   audio_url VARCHAR(500),
@@ -49,7 +48,7 @@ CREATE TABLE messages (
 );
 
 -- Tabla de relación tutor-niño (muchos a muchos)
-CREATE TABLE tutor_child_relations (
+CREATE TABLE IF NOT EXISTS tutor_child_relations (
   id INT AUTO_INCREMENT PRIMARY KEY,
   tutor_id INT NOT NULL,
   child_id INT NOT NULL,
@@ -60,7 +59,7 @@ CREATE TABLE tutor_child_relations (
 );
 
 -- Tabla de mensajes asignados a niños
-CREATE TABLE child_messages (
+CREATE TABLE IF NOT EXISTS child_messages (
   id INT AUTO_INCREMENT PRIMARY KEY,
   child_id INT NOT NULL,
   message_id INT NOT NULL,
@@ -73,17 +72,16 @@ CREATE TABLE child_messages (
   UNIQUE KEY unique_assignment (child_id, message_id)
 );
 
--- Insertar roles del sistema
-INSERT INTO roles (name, description) VALUES 
+-- Insertar roles del sistema (solo si no existen)
+INSERT IGNORE INTO roles (name, description) VALUES 
 ('administrador', 'Acceso completo al sistema, gestión de usuarios y configuración'),
 ('tutor', 'Puede gestionar niños, crear mensajes y categorías'),
 ('niño', 'Puede escuchar mensajes asignados y reproducir audios');
 
--- Insertar categorías básicas
-INSERT INTO categories (name, description, color, icon) VALUES 
+-- Insertar categorías básicas (solo si no existen)
+INSERT IGNORE INTO categories (name, description, color, icon) VALUES 
 ('Saludos', 'Mensajes de saludo y despedida', '#4CAF50', 'waving-hand'),
 ('Emociones', 'Expresión de sentimientos y emociones', '#2196F3', 'heart'),
 ('Necesidades', 'Comunicación de necesidades básicas', '#FF9800', 'help'),
 ('Familia', 'Mensajes relacionados con la familia', '#9C27B0', 'family'),
 ('Emergencia', 'Mensajes de urgencia o emergencia', '#F44336', 'emergency');
-

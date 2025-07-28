@@ -401,4 +401,12 @@ router.get('/check/:tutorId/:childId',
     relationController.checkRelation
 );
 
+// Obtener estadísticas de un niño específico
+router.get('/child/:childId/stats',
+    authMiddleware,
+    tutorOrAdmin,
+    validateParams(paramSchemas.childId),
+    relationController.getChildStats
+);
+
 export default router;

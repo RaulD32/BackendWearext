@@ -17,7 +17,11 @@ export class ChildMessageService extends BaseService {
             }
 
             // Verificar que el niño existe y tiene rol de niño
-            const childQuery = 'SELECT id FROM users WHERE id = ? AND role_id = 3';
+            const childQuery = `
+                SELECT u.id FROM users u 
+                JOIN roles r ON u.role_id = r.id 
+                WHERE u.id = ? AND r.name = 'niño'
+            `;
             const [childRows] = await this.pool.execute(childQuery, [assignData.child_id]);
             if ((childRows as any[]).length === 0) {
                 throw new Error('El niño especificado no existe');

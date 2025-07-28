@@ -295,7 +295,7 @@ router.post('/assign',
  */
 router.get('/child/:childId',
     childOrTutorOrAdmin,
-    validateParams(paramSchemas.id),
+    validateParams(paramSchemas.childId),
     childMessageController.getChildMessages
 );
 

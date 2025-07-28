@@ -10,6 +10,14 @@ export class ChildMessageController {
             const assignedBy = req.user!.id;
             const userRole = req.user!.role_name;
 
+            // Validar datos de entrada
+            if (!assignData.child_id || !assignData.message_id) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'child_id y message_id son requeridos'
+                });
+            }
+
             // Solo tutores y administradores pueden asignar mensajes
             if (userRole !== 'tutor' && userRole !== 'administrador') {
                 return res.status(403).json({
@@ -20,8 +28,14 @@ export class ChildMessageController {
 
             // Si es tutor, verificar que el niño esté relacionado con él
             if (userRole === 'tutor') {
-                // Aquí deberías verificar la relación tutor-niño
-                // Por ahora permitimos que cualquier tutor asigne a cualquier niño
+                const relationQuery = 'SELECT id FROM tutor_child_relations WHERE tutor_id = ? AND child_id = ?';
+                const [relationRows] = await (childMessageService as any).pool.execute(relationQuery, [assignedBy, assignData.child_id]);
+                if ((relationRows as any[]).length === 0) {
+                    return res.status(403).json({
+                        success: false,
+                        message: 'No tienes permisos para asignar mensajes a este niño'
+                    });
+                }
             }
 
             const newAssignment = await childMessageService.assignMessageToChild(assignData, assignedBy);
@@ -31,11 +45,27 @@ export class ChildMessageController {
                 data: newAssignment,
                 message: 'Mensaje asignado exitosamente'
             });
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error en ChildMessageController.assignMessage:', error);
+
+            // Manejar errores específicos
+            if (error.message.includes('ya está asignado')) {
+                return res.status(409).json({
+                    success: false,
+                    message: error.message
+                });
+            }
+
+            if (error.message.includes('no existe')) {
+                return res.status(404).json({
+                    success: false,
+                    message: error.message
+                });
+            }
+
             res.status(400).json({
                 success: false,
-                message: error instanceof Error ? error.message : 'Error al asignar mensaje'
+                message: error.message || 'Error al asignar mensaje'
             });
         }
     }

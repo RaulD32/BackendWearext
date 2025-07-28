@@ -332,6 +332,47 @@ export class RelationController {
             });
         }
     }
+
+    async getChildStats(req: AuthRequest, res: Response) {
+        try {
+            const { childId } = req.params;
+            const userRole = req.user!.role_name;
+            const userId = req.user!.id;
+
+            // Solo admin o tutor relacionado pueden ver estadísticas de un niño
+            if (userRole !== 'administrador') {
+                if (userRole !== 'tutor') {
+                    return res.status(403).json({
+                        success: false,
+                        message: 'No tienes permisos para ver estadísticas de niños'
+                    });
+                }
+
+                // Verificar que el tutor tiene relación con el niño
+                const hasRelation = await relationService.checkRelationExists(userId, parseInt(childId));
+                if (!hasRelation) {
+                    return res.status(403).json({
+                        success: false,
+                        message: 'No tienes una relación con este niño'
+                    });
+                }
+            }
+
+            const stats = await relationService.getChildStats(parseInt(childId));
+
+            res.json({
+                success: true,
+                data: stats,
+                message: 'Estadísticas obtenidas exitosamente'
+            });
+        } catch (error) {
+            console.error('Error en RelationController.getChildStats:', error);
+            res.status(500).json({
+                success: false,
+                message: error instanceof Error ? error.message : 'Error interno del servidor'
+            });
+        }
+    }
 }
 
 export const relationController = new RelationController();

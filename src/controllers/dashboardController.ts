@@ -57,9 +57,18 @@ export class DashboardController {
             const [childrenResult] = await pool.execute('SELECT COUNT(*) as count FROM tutor_child_relations WHERE tutor_id = ?', [tutorId]);
             const [messagesResult] = await pool.execute('SELECT COUNT(*) as count FROM messages WHERE created_by = ? AND is_active = true', [tutorId]);
 
+            // Obtener total de mensajes asignados a todos los niños del tutor
+            const [assignedMessagesResult] = await pool.execute(`
+                SELECT COUNT(*) as count 
+                FROM child_messages cm
+                JOIN tutor_child_relations tcr ON cm.child_id = tcr.child_id 
+                WHERE tcr.tutor_id = ?
+            `, [tutorId]);
+
             return {
                 myChildren: (childrenResult as any)[0].count,
-                myMessages: (messagesResult as any)[0].count
+                myMessages: (messagesResult as any)[0].count,
+                assignedMessages: (assignedMessagesResult as any)[0].count
             };
         } catch (error) {
             console.error('Error al obtener estadísticas de tutor:', error);
@@ -71,10 +80,18 @@ export class DashboardController {
         try {
             const [messagesResult] = await pool.execute('SELECT COUNT(*) as count FROM child_messages WHERE child_id = ?', [childId]);
             const [favoritesResult] = await pool.execute('SELECT COUNT(*) as count FROM child_messages WHERE child_id = ? AND is_favorite = true', [childId]);
+            const [categoriesResult] = await pool.execute(`
+                SELECT COUNT(DISTINCT c.id) as count 
+                FROM categories c 
+                JOIN messages m ON c.id = m.category_id 
+                JOIN child_messages cm ON m.id = cm.message_id 
+                WHERE cm.child_id = ?
+            `, [childId]);
 
             return {
                 totalMessages: (messagesResult as any)[0].count,
-                favoriteMessages: (favoritesResult as any)[0].count
+                favoriteMessages: (favoritesResult as any)[0].count,
+                totalCategories: (categoriesResult as any)[0].count
             };
         } catch (error) {
             console.error('Error al obtener estadísticas de niño:', error);
@@ -96,22 +113,22 @@ export class DashboardController {
             } else if (userRole === 'tutor') {
                 // Tutor puede ver actividad de sus niños asignados
                 const [rows] = await pool.execute(`
-                    SELECT m.*, cm.created_at as assigned_at 
+                    SELECT m.*, cm.assigned_at 
                     FROM messages m 
                     JOIN child_messages cm ON m.id = cm.message_id 
                     JOIN tutor_child_relations tcr ON cm.child_id = tcr.child_id 
                     WHERE tcr.tutor_id = ? 
-                    ORDER BY cm.created_at DESC LIMIT 20
+                    ORDER BY cm.assigned_at DESC LIMIT 20
                 `, [userId]);
                 activity = rows as any[];
             } else if (userRole === 'niño') {
                 // Niño puede ver sus propios mensajes asignados
                 const [rows] = await pool.execute(`
-                    SELECT m.*, cm.created_at as assigned_at 
+                    SELECT m.*, cm.assigned_at 
                     FROM messages m 
                     JOIN child_messages cm ON m.id = cm.message_id 
                     WHERE cm.child_id = ? 
-                    ORDER BY cm.created_at DESC LIMIT 20
+                    ORDER BY cm.assigned_at DESC LIMIT 20
                 `, [userId]);
                 activity = rows as any[];
             }

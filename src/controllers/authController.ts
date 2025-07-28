@@ -16,6 +16,18 @@ export async function loginController(req: Request, res: Response, next: NextFun
   try {
     const { email, password } = req.body;
     const result = await authService.login(email, password);
+
+    // Mostrar token en consola para facilitar pruebas
+    if (result.success && result.data.token) {
+      console.log('');
+      console.log('🔑 TOKEN GENERADO PARA PRUEBAS:');
+      console.log('═'.repeat(80));
+      console.log(result.data.token);
+      console.log('═'.repeat(80));
+      console.log('💡 Copia este token para usar en las pruebas de WhatsApp');
+      console.log('');
+    }
+
     res.json(result);
   } catch (error) {
     next(error);

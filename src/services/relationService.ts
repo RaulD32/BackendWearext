@@ -1,6 +1,14 @@
 import { BaseService } from './baseService.js';
 import { TutorChildRelation, CreateRelationDTO, RelationResponse } from '../models/TutorChildRelation.js';
 
+export interface ChildStats {
+    childId: number;
+    childName: string;
+    messagesCount: number;
+    favoriteMessagesCount: number;
+    categoriesCount: number;
+}
+
 export class RelationService extends BaseService {
 
     constructor() {
@@ -281,6 +289,50 @@ export class RelationService extends BaseService {
         } catch (error) {
             console.error('Error al obtener estadísticas de relaciones:', error);
             throw new Error('Error al obtener estadísticas');
+        }
+    }
+
+    async getChildStats(childId: number): Promise<ChildStats> {
+        try {
+            // Obtener información básica del niño
+            const childQuery = 'SELECT id, name FROM users WHERE id = ? AND role_id = 3';
+            const [childRows] = await this.pool.execute(childQuery, [childId]);
+            if ((childRows as any[]).length === 0) {
+                throw new Error('Niño no encontrado');
+            }
+            const child = (childRows as any[])[0];
+
+            // Obtener conteo de mensajes asignados
+            const messagesQuery = 'SELECT COUNT(*) as count FROM child_messages WHERE child_id = ?';
+            const [messagesRows] = await this.pool.execute(messagesQuery, [childId]);
+            const messagesCount = (messagesRows as any[])[0].count || 0;
+
+            // Obtener conteo de mensajes favoritos
+            const favoritesQuery = 'SELECT COUNT(*) as count FROM child_messages WHERE child_id = ? AND is_favorite = true';
+            const [favoritesRows] = await this.pool.execute(favoritesQuery, [childId]);
+            const favoriteMessagesCount = (favoritesRows as any[])[0].count || 0;
+
+            // Obtener conteo de categorías distintas
+            const categoriesQuery = `
+                SELECT COUNT(DISTINCT c.id) as count 
+                FROM categories c 
+                JOIN messages m ON c.id = m.category_id 
+                JOIN child_messages cm ON m.id = cm.message_id 
+                WHERE cm.child_id = ?
+            `;
+            const [categoriesRows] = await this.pool.execute(categoriesQuery, [childId]);
+            const categoriesCount = (categoriesRows as any[])[0].count || 0;
+
+            return {
+                childId: child.id,
+                childName: child.name,
+                messagesCount,
+                favoriteMessagesCount,
+                categoriesCount
+            };
+        } catch (error) {
+            console.error('Error al obtener estadísticas del niño:', error);
+            throw new Error('Error al obtener estadísticas del niño');
         }
     }
 }
