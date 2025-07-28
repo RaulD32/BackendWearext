@@ -144,7 +144,8 @@ google-cloud-key*.json
 temp/
 tmp/
 *.tmp
-
+.wwebjs_auth/
+.wwebjs_cache/
 # Package lock files (if using yarn, exclude package-lock.json)
 # package-lock.json
 

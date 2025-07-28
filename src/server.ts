@@ -4,13 +4,14 @@ import { initializeWhatsAppOnStartup, showWhatsAppConfig } from './config/whatsa
 
 dotenv.config();
 
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
+const HOST = process.env.HOST || '0.0.0.0';
 
-app.listen(PORT, async () => {
-  console.log(`Servidor corriendo en puerto ${PORT}`);
+app.listen(PORT, HOST, async () => {
+  console.log(`Servidor corriendo en ${HOST}:${PORT}`);
   console.log('🚀 SISTEMA WEAREXT INICIADO');
-  console.log('📍 Swagger: http://localhost:3000/api-docs');
-
+  console.log(`📍 Swagger: http://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${PORT}/api-docs`);
+  console.log(`🔌 WebSocket disponible en: ws://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${process.env.WS_PORT || 8080}/ws`);
 
   showWhatsAppConfig();
 

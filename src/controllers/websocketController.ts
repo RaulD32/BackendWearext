@@ -59,8 +59,12 @@ class WebSocketController {
     private mobileClients: Set<WebSocket> = new Set();
 
     constructor() {
+        const wsPort = process.env.WS_PORT || 8080;
+        const wsHost = process.env.WS_HOST || '0.0.0.0';
+
         this.wss = new WebSocketServer({
-            port: 8080,
+            port: Number(wsPort),
+            host: wsHost,
             path: '/ws'
         });
 
@@ -68,7 +72,7 @@ class WebSocketController {
             this.handleConnection(ws, req);
         });
 
-        console.log('🔌 WebSocket server iniciado en puerto 8080');
+        console.log(`🔌 WebSocket server iniciado en ${wsHost}:${wsPort}/ws`);
 
         // Cleanup de clientes desconectados cada 30 segundos
         setInterval(() => {
